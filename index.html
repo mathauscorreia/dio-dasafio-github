@@ -198,7 +198,11 @@
             background-color: #28a745;
             color: white;
         }
-
+        button{
+            border-radius:5px;
+            border: none;
+            padding: 5px;
+        }
 
     </style>
 </head>
@@ -209,7 +213,6 @@
     <div class="notes-background" id="notes-background"></div>
     <div class="container">
         <div class="month-grid" id="month-grid">
-            <!-- Months and days will be dynamically generated here -->
         </div>
     </div>
 
@@ -243,7 +246,7 @@ let currentDate;
 
 function generateCalendar() {
     const grid = document.getElementById('month-grid');
-    grid.innerHTML = ''; // Limpa o grid antes de recriar o calendário
+    grid.innerHTML = '';
     months.forEach((month, index) => {
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month';
@@ -336,8 +339,8 @@ function openDateSelector(monthIndex, day) {
         events[`${monthIndex}-${day}`].forEach((event, index) => {
             const listItem = document.createElement('li');
             listItem.innerHTML = `${event} 
-                <button onclick="editEvent(${index})">Editar</button> 
-                <button onclick="deleteEvent(${index})">Excluir</button>`;
+                <button  class="" onclick="editEvent(${index})">Editar</button> 
+                <button style="background-color: #dc3545;" onclick="deleteEvent(${index})">Excluir</button>`;
             currentList.appendChild(listItem);
         });
     }
@@ -366,7 +369,21 @@ function saveEvent() {
 
     performerInput.value = '';
     closeModal();
-    generateCalendar();  // Recriar o calendário para refletir as alterações
+    generateCalendar();
+}
+function deleteEvent(index = null) {
+    if (index === null) return;
+
+    const key = `${currentMonth}-${currentDate}`;
+    if (events[key]) {
+        events[key].splice(index, 1);
+        if (events[key].length === 0) {
+            delete events[key];
+        }
+    }
+
+    closeModal();
+    generateCalendar(); 
 }
 
 
@@ -374,9 +391,9 @@ function editEvent(index) {
     const performerInput = document.getElementById('performer');
     const currentPerformer = events[`${currentMonth}-${currentDate}`][index];
     performerInput.value = currentPerformer;
-    currentEventIndex = index; // Armazena o índice do evento a ser editado
-    closeModal(); // Fecha o modal atual
-    openDateSelector(currentMonth, currentDate); // Reabre o modal para mostrar a lista atualizada
+    currentEventIndex = index;
+    closeModal();
+    openDateSelector(currentMonth, currentDate);
 }
 
 function exportMonthToPDF(monthIndex) {

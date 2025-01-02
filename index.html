@@ -194,6 +194,12 @@
             color: #28a745;
             font-weight: bold;
         }
+        .filled {
+            background-color: #28a745;
+            color: white;
+        }
+
+
     </style>
 </head>
 <body>
@@ -237,6 +243,7 @@ let currentDate;
 
 function generateCalendar() {
     const grid = document.getElementById('month-grid');
+    grid.innerHTML = ''; // Limpa o grid antes de recriar o calendário
     months.forEach((month, index) => {
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month';
@@ -246,7 +253,7 @@ function generateCalendar() {
 
         const exportButton = document.createElement('button');
         exportButton.className = 'export-button';
-        exportButton.innerText = 'Baixar Escala'; // Corrigido para texto entre aspas
+        exportButton.innerText = 'Baixar Escala';
         exportButton.onclick = () => exportMonthToPDF(index);
         monthDiv.appendChild(exportButton);
 
@@ -273,6 +280,12 @@ function generateCalendar() {
         for (let day = 1; day <= daysInMonth; day++) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'day';
+
+            const key = `${index}-${day}`;
+            if (events[key]) {
+                dayDiv.classList.add('filled');
+            }
+
             dayDiv.innerText = day;
             dayDiv.onclick = () => openDateSelector(index, day);
             daysDiv.appendChild(dayDiv);
@@ -340,30 +353,22 @@ function saveEvent() {
     const performer = performerInput.value;
     if (!performer) return;
 
+    const key = `${currentMonth}-${currentDate}`;
     if (currentEventIndex !== null) {
-        events[`${currentMonth}-${currentDate}`][currentEventIndex] = performer;
+        events[key][currentEventIndex] = performer;
         currentEventIndex = null;
     } else {
-        if (!events[`${currentMonth}-${currentDate}`]) {
-            events[`${currentMonth}-${currentDate}`] = [];
+        if (!events[key]) {
+            events[key] = [];
         }
-        events[`${currentMonth}-${currentDate}`].push(performer);
+        events[key].push(performer);
     }
 
     performerInput.value = '';
     closeModal();
-    generateCalendar();
+    generateCalendar();  // Recriar o calendário para refletir as alterações
 }
-function deleteEvent(index) {
-    if (events[`${currentMonth}-${currentDate}`]) {
-        events[`${currentMonth}-${currentDate}`].splice(index, 1);
-        if (events[`${currentMonth}-${currentDate}`].length === 0) {
-            delete events[`${currentMonth}-${currentDate}`];
-        }
-    }
-    closeModal();
-    generateCalendar();
-}
+
 
 function editEvent(index) {
     const performerInput = document.getElementById('performer');

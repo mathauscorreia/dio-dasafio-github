@@ -374,6 +374,25 @@ function editEvent(index) {
     openDateSelector(currentMonth, currentDate); // Reabre o modal para mostrar a lista atualizada
 }
 
+function exportMonthToPDF(monthIndex) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const title = `Eventos do mês de ${months[monthIndex]}`;
+    doc.text(title, 10, 10);
+
+    let y = 20;
+    for (let day = 1; day <= 31; day++) {
+        const key = `${monthIndex}-${day}`;
+        if (events[key]) {
+            doc.text(`${day} de ${months[monthIndex]}: ${events[key].join(', ')}`, 10, y);
+            y += 10;
+        }
+    }
+    doc.save(`${months[monthIndex]}-eventos.pdf`);
+}
+
+
 window.onload = generateCalendar;
 
     </script>

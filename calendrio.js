@@ -48,7 +48,11 @@ function generateCalendar() {
 
             const key = `${index}-${day}`;
             if (events[key]) {
-                dayDiv.classList.add('filled');
+                if (events[key].type === "culto") {
+                    dayDiv.classList.add('culto');
+                } else if (events[key].type === "evento") {
+                    dayDiv.classList.add('evento');
+                }
             }
 
             dayDiv.innerText = day;
@@ -61,6 +65,7 @@ function generateCalendar() {
 
     generateNotesBackground();
 }
+
 
 function generateNotesBackground() {
     const notesBackground = document.getElementById('notes-background');
@@ -98,10 +103,10 @@ function openDateSelector(monthIndex, day) {
     const currentList = document.getElementById('current-performers-list');
     currentList.innerHTML = '';
     if (events[`${monthIndex}-${day}`]) {
-        events[`${monthIndex}-${day}`].forEach((event, index) => {
+        events[`${monthIndex}-${day}`].performers.forEach((performer, index) => {
             const listItem = document.createElement('li');
-            listItem.innerHTML = `${event} 
-                <button  class="" onclick="editEvent(${index})">Editar</button> 
+            listItem.innerHTML = `${performer}
+                <button class="" onclick="editEvent(${index})">Editar</button>
                 <button style="background-color: #dc3545;" onclick="deleteEvent(${index})">Excluir</button>`;
             currentList.appendChild(listItem);
         });
@@ -116,42 +121,46 @@ function closeModal() {
 function saveEvent() {
     const performerInput = document.getElementById('performer');
     const performer = performerInput.value;
-    if (!performer) return;
+    const eventTypeInput = document.querySelector('input[name="event-type"]:checked');
+    if (!performer || !eventTypeInput) return;
 
+    const eventType = eventTypeInput.value;
     const key = `${currentMonth}-${currentDate}`;
     if (currentEventIndex !== null) {
-        events[key][currentEventIndex] = performer;
+        events[key].performers[currentEventIndex] = performer;
         currentEventIndex = null;
     } else {
         if (!events[key]) {
-            events[key] = [];
+            events[key] = { performers: [], type: eventType };
+        } else {
+            events[key].type = eventType; // Atualiza o tipo se já houver um evento
         }
-        events[key].push(performer);
+        events[key].performers.push(performer);
     }
 
     performerInput.value = '';
     closeModal();
     generateCalendar();
 }
+
 function deleteEvent(index = null) {
     if (index === null) return;
 
     const key = `${currentMonth}-${currentDate}`;
     if (events[key]) {
-        events[key].splice(index, 1);
-        if (events[key].length === 0) {
+        events[key].performers.splice(index, 1);
+        if (events[key].performers.length === 0) {
             delete events[key];
         }
     }
 
     closeModal();
-    generateCalendar(); 
+    generateCalendar();
 }
-
 
 function editEvent(index) {
     const performerInput = document.getElementById('performer');
-    const currentPerformer = events[`${currentMonth}-${currentDate}`][index];
+    const currentPerformer = events[`${currentMonth}-${currentDate}`].performers[index];
     performerInput.value = currentPerformer;
     currentEventIndex = index;
     closeModal();
@@ -169,12 +178,11 @@ function exportMonthToPDF(monthIndex) {
     for (let day = 1; day <= 31; day++) {
         const key = `${monthIndex}-${day}`;
         if (events[key]) {
-            doc.text(`${day} de ${months[monthIndex]}: ${events[key].join(', ')}`, 10, y);
+            doc.text(`${day} de ${months[monthIndex]}: ${events[key].performers.join(', ')}`, 10, y);
             y += 10;
         }
     }
     doc.save(`${months[monthIndex]}-eventos.pdf`);
 }
-
 
 window.onload = generateCalendar;

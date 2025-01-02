@@ -307,20 +307,24 @@ function generateNotesBackground() {
     });
 }
 
+let currentEventIndex = null;
+
 function openDateSelector(monthIndex, day) {
     currentMonth = monthIndex;
     currentDate = day;
     const modal = document.getElementById('eventModal');
     const title = document.getElementById('modal-title');
-    title.innerText = `Eventos em ${day} de ${months[monthIndex]}`; // Corrigido para interpolação de string
+    title.innerText = `Eventos em ${day} de ${months[monthIndex]}`;
     modal.style.display = 'block';
 
     const currentList = document.getElementById('current-performers-list');
     currentList.innerHTML = '';
-    if (events[`${monthIndex}-${day}`]) { // Corrigido para interpolação de string
-        events[`${monthIndex}-${day}`].forEach(event => {
+    if (events[`${monthIndex}-${day}`]) {
+        events[`${monthIndex}-${day}`].forEach((event, index) => {
             const listItem = document.createElement('li');
-            listItem.innerText = event;
+            listItem.innerHTML = `${event} 
+                <button onclick="editEvent(${index})">Editar</button> 
+                <button onclick="deleteEvent(${index})">Excluir</button>`;
             currentList.appendChild(listItem);
         });
     }
@@ -336,38 +340,38 @@ function saveEvent() {
     const performer = performerInput.value;
     if (!performer) return;
 
-    if (!events[`${currentMonth}-${currentDate}`]) { // Corrigido para interpolação de string
-        events[`${currentMonth}-${currentDate}`] = [];
+    if (currentEventIndex !== null) {
+        events[`${currentMonth}-${currentDate}`][currentEventIndex] = performer;
+        currentEventIndex = null;
+    } else {
+        if (!events[`${currentMonth}-${currentDate}`]) {
+            events[`${currentMonth}-${currentDate}`] = [];
+        }
+        events[`${currentMonth}-${currentDate}`].push(performer);
     }
-    events[`${currentMonth}-${currentDate}`].push(performer); // Corrigido para interpolação de string
+
     performerInput.value = '';
     closeModal();
     generateCalendar();
 }
-
-function deleteEvent() {
-    if (events[`${currentMonth}-${currentDate}`]) { // Corrigido para interpolação de string
-        delete events[`${currentMonth}-${currentDate}`]; // Corrigido para interpolação de string
-        closeModal();
-        generateCalendar();
-    }
-}
-
-function exportMonthToPDF(monthIndex) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const title = `Eventos do mês de ${months[monthIndex]}`; // Corrigido para interpolação de string
-    doc.text(title, 10, 10);
-
-    let y = 20;
-    for (let day = 1; day <= 31; day++) {
-        const key = `${monthIndex}-${day}`; // Corrigido para interpolação de string
-        if (events[key]) {
-            doc.text(`${day} de ${months[monthIndex]}: ${events[key].join(', ')}`, 10, y); // Corrigido para interpolação de string
-            y += 10;
+function deleteEvent(index) {
+    if (events[`${currentMonth}-${currentDate}`]) {
+        events[`${currentMonth}-${currentDate}`].splice(index, 1);
+        if (events[`${currentMonth}-${currentDate}`].length === 0) {
+            delete events[`${currentMonth}-${currentDate}`];
         }
     }
-    doc.save(`${months[monthIndex]}-eventos.pdf`); // Corrigido para interpolação de string
+    closeModal();
+    generateCalendar();
+}
+
+function editEvent(index) {
+    const performerInput = document.getElementById('performer');
+    const currentPerformer = events[`${currentMonth}-${currentDate}`][index];
+    performerInput.value = currentPerformer;
+    currentEventIndex = index; // Armazena o índice do evento a ser editado
+    closeModal(); // Fecha o modal atual
+    openDateSelector(currentMonth, currentDate); // Reabre o modal para mostrar a lista atualizada
 }
 
 window.onload = generateCalendar;
